@@ -49,6 +49,31 @@
     var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path');
     svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true'); path.setAttribute('d', ICON[id] || ''); svg.appendChild(path); return svg;
   }
+  var MENU = [
+    { tab: 'geral' },
+    { id: 'comercial', nome: 'Comercial', icone: 'comercial', filhos: [['leads', 'Leads'], ['esteira', 'Esteira de produtos'], ['workflow', 'Workflow comercial'], ['fluxos', 'Construtor de processos']] },
+    { id: 'carteira', nome: 'Clientes e entregas', icone: 'clientes', filhos: [['clientes', 'Clientes'], ['contratos', 'Contratos', 1], ['entregas', 'Entregas'], ['trafego', 'Tráfego pago']] },
+    { id: 'financas', nome: 'Financeiro', icone: 'financeiro', admin: 1, filhos: [['financeiro', 'Cobranças do mês', 1, 'topo'], ['financeiro', 'Atrasadas', 1, 'atrasadas'], ['financeiro', 'Custos', 1, 'custos'], ['financeiro', 'Resultado por cliente', 1, 'resultado']] },
+    { tab: 'habilidades' },
+    { id: 'ajustes', nome: 'Configurações', icone: 'config', admin: 1, filhos: [['config', 'Tamanho da tela', 1, 'tela'], ['config', 'Avisos', 1, 'avisos'], ['config', 'Equipe', 1, 'equipe'], ['config', 'Cópias de segurança', 1, 'backups'], ['config', 'Exportar planilhas', 1, 'exportar'], ['config', 'Integração Espia só', 1, 'integracao'], ['config', 'Histórico', 1, 'historico']] }
+  ];
+  ICON.comercial = 'M3 17l6-6 4 4 8-8M15 7h6v6';
+  ICON.seta = 'M9 6l6 6-6 6';
+  ICON.recolher = 'M15 6l-6 6 6 6';
+  ICON.expandir = 'M9 6l6 6-6 6';
+  function pref(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  var ESCALAS = { compacto: [0.75, 'Compacto'], medio: [0.875, 'Médio'], normal: [1, 'Normal'] };
+  function escalaAtual() { return ESCALAS[pref('mv_escala')] ? pref('mv_escala') : (window.innerWidth < 900 ? 'normal' : 'compacto'); }
+  function aplicarEscala() { document.documentElement.style.setProperty('--esc', ESCALAS[escalaAtual()][0]); }
+  function mini(v) {
+    if (v !== undefined) pref('mv_menu_mini', v ? '1' : '0');
+    var on = pref('mv_menu_mini') === '1';
+    document.body.classList.toggle('menu-mini', on);
+    var b = $('#recolher'); b.textContent = ''; b.appendChild(icone(on ? 'expandir' : 'recolher'));
+    b.setAttribute('aria-label', on ? 'Mostrar menu completo' : 'Recolher menu'); b.title = on ? 'Mostrar menu completo' : 'Recolher menu';
+    return on;
+  }
+  function gruposAbertos() { try { return JSON.parse(pref('mv_menu_abertos') || '{}') || {}; } catch (e) { return {}; } }
   function menu(abrir) { document.body.classList.toggle('menu-open', abrir); $('#menuBtn').setAttribute('aria-expanded', String(abrir)); }
 
   var S = { db: null, etag: '', pedidos: [], eu: null, tab: 'geral', f: {} };
@@ -376,7 +401,11 @@
   /* ---------- telas ---------- */
   function cab(titulo, sub, botoes) { return h('div', { class: 'head' }, h('div', null, h('h2', { text: titulo }), sub ? h('p', { text: sub }) : null), botoes ? h('div', { class: 'acts' }, botoes) : null); }
   function kpi(l, v, s, warn) { return h('div', { class: 'kpi' + (warn ? ' warn' : '') }, h('div', { class: 'l', text: l }), h('div', { class: 'v', text: v }), s ? h('div', { class: 's', text: s }) : null); }
-  function ir(tab, f) { S.tab = tab; if (f) Object.assign(S.f, f); render(); window.scrollTo(0, 0); }
+  function ir(tab, f, secao) {
+    S.tab = tab; S.secao = secao || null; if (f) Object.assign(S.f, f); render();
+    var alvo = secao && document.getElementById('sec-' + secao);
+    if (alvo && secao !== 'topo') alvo.scrollIntoView({ behavior: 'smooth', block: 'start' }); else window.scrollTo(0, 0);
+  }
 
   function telaGeral() {
     var db = S.db, adm = admin(), ativos = db.clientes.filter(function (c) { return c.status === 'ativo'; });
@@ -842,6 +871,7 @@
     var custosMes = S.db.custos.filter(function (x) { return custoNoMes(x, m) > 0; });
     var porCli = S.db.clientes.map(function (c) { return { c: c, r: recebidoNoMes(m, c.id), k: custosDoMes(m, c.id) }; }).filter(function (x) { return x.r || x.k; }).sort(function (a, b) { return (b.r - b.k) - (a.r - a.k); });
     return h('div', null,
+      h('span', { id: 'sec-topo' }),
       cab('Financeiro', 'Cobranças de cada mês, o que já entrou, o que está atrasado, os custos e o lucro.', [
         h('button', { class: 'ghost sm', text: 'Novo custo', onclick: function () { formCusto(null); } }),
         h('button', { class: 'sm', text: 'Nova cobrança', onclick: function () { formCobranca(null); } })]),
@@ -855,8 +885,9 @@
         kpi('Lucro', brl(recebido - custos), 'recebido menos custos', recebido - custos < 0)),
       h('p', { class: 'sec', text: 'Cobranças de ' + mesNome(m) }),
       cobs.length ? h('div', { class: 'list' }, cobs.map(linhaCob)) : h('p', { class: 'empty', text: 'Nenhuma cobrança neste mês. Elas são criadas sozinhas a partir dos contratos com valor preenchido.' }),
-      outrasAtr.length ? [h('p', { class: 'sec', text: 'Atrasadas de outros meses · ' + outrasAtr.length }), h('div', { class: 'list' }, outrasAtr.map(linhaCob))] : null,
-      h('p', { class: 'sec', text: 'Custos de ' + mesNome(m) }),
+      h('p', { class: 'sec', id: 'sec-atrasadas', text: 'Atrasadas · ' + S.db.cobrancas.filter(cobAtrasada).length }),
+      S.db.cobrancas.filter(cobAtrasada).length ? h('div', { class: 'list' }, S.db.cobrancas.filter(cobAtrasada).sort(function (a, b) { return a.vencimento < b.vencimento ? -1 : 1; }).map(linhaCob)) : h('p', { class: 'empty', text: 'Nenhuma cobrança atrasada. Tudo em dia.' }),
+      h('p', { class: 'sec', id: 'sec-custos', text: 'Custos de ' + mesNome(m) }),
       custosMes.length ? h('div', { class: 'list' }, custosMes.map(function (x) {
         return h('div', { class: 'line fin', role: 'button', tabindex: '0', onclick: function () { formCusto(x); } },
           h('div', null, h('div', { text: x.descricao }), h('div', { class: 'sub', text: x.categoria })),
@@ -864,7 +895,9 @@
           h('div', { class: 'val', text: brl(custoNoMes(x, m)) }),
           h('span', { class: 'tag g', text: x.recorrencia === 'mensal' ? 'Todo mês' : 'Uma vez' }), h('span'));
       })) : h('p', { class: 'empty', text: 'Nenhum custo lançado neste mês.' }),
-      porCli.length ? [h('p', { class: 'sec', text: 'Resultado por cliente em ' + mesNome(m) }), h('div', { class: 'panel' }, h('div', { class: 'rows' }, porCli.map(function (x) {
+      h('p', { class: 'sec', id: 'sec-resultado', text: 'Resultado por cliente em ' + mesNome(m) }),
+      !porCli.length ? h('p', { class: 'empty', text: 'Sem recebimentos ou custos ligados a clientes neste mês.' }) : null,
+      porCli.length ? [ h('div', { class: 'panel' }, h('div', { class: 'rows' }, porCli.map(function (x) {
         return h('div', { class: 'row' }, h('span', null, h('b', { text: x.c.nome }), h('span', { class: 'meta', text: ' · recebido ' + brl(x.r) + (x.k ? ', custos ' + brl(x.k) : '') })), h('b', { style: x.r - x.k < 0 ? 'color:var(--erro)' : '', text: brl(x.r - x.k) }));
       })))] : null);
   }
@@ -992,13 +1025,16 @@
     return h('div', null,
       cab('Configurações', 'Avisos, equipe, cópias de segurança, exportação e integrações.'),
       h('div', { class: 'grid2' },
-        h('div', { class: 'panel' }, h('h3', { text: 'Avisos no celular e no computador' }),
+        h('div', { class: 'panel', id: 'sec-tela' }, h('h3', { text: 'Tamanho da tela' }),
+          h('p', { class: 'meta', text: 'Deixa letras e espaços menores para caber mais informação. Vale só para este navegador. Se você tinha diminuído o zoom do navegador, volte ele para 100%.' }),
+          h('div', { class: 'escalas' }, Object.keys(ESCALAS).map(function (k) { var at = escalaAtual() === k; return h('button', { class: 'chip', 'aria-pressed': String(at), text: ESCALAS[k][1] + (k === 'compacto' ? ' (como 75%)' : k === 'normal' ? ' (100%)' : ''), onclick: function () { pref('mv_escala', k); aplicarEscala(); render(); } }); }))),
+        h('div', { class: 'panel', id: 'sec-avisos' }, h('h3', { text: 'Avisos no celular e no computador' }),
           h('p', { class: 'meta', text: estado }),
           h('p', { class: 'meta', text: 'Você recebe um aviso a cada pedido novo e um resumo às 8h com leads parados, amostras vencendo, reuniões, cobranças e entregas atrasadas. ' + c.aparelhos + (c.aparelhos === 1 ? ' aparelho cadastrado.' : ' aparelhos cadastrados.') }),
           h('div', { class: 'acts' },
             S.pushEstado !== 'ativo' ? h('button', { class: 'sm', text: 'Ativar neste aparelho', onclick: function () { ativarAvisos().then(function () { S.pushEstado = 'ativo'; sync('Avisos ativados neste aparelho'); carregarConfig(); }).catch(avisoErro); } }) : null,
             h('button', { class: 'ghost sm', text: 'Enviar aviso de teste', onclick: function () { api('POST', '/api/push?teste=1', {}).then(function (r) { sync(r.enviados ? 'Aviso de teste enviado' : 'Nenhum aparelho recebe avisos ainda', !r.enviados); }).catch(function () { sync('Não foi possível enviar o teste.', true); }); } }))),
-        h('div', { class: 'panel' }, h('h3', { text: 'Equipe' }),
+        h('div', { class: 'panel', id: 'sec-equipe' }, h('h3', { text: 'Equipe' }),
           h('p', { class: 'meta', text: 'Cada pessoa entra com a própria chave. Quem é da equipe vê leads, clientes, entregas, tráfego, workflow e habilidades, mas não vê valores, contratos, financeiro nem esta tela.' }),
           c.membros.length ? h('div', { class: 'rows' }, c.membros.map(function (m) {
             return h('div', { class: 'row' }, h('span', null, h('b', { text: m.nome }), h('span', { class: 'meta', text: ' · ' + (m.papel === 'admin' ? 'administrador' : 'equipe') + ' · desde ' + dt(m.criadoEm) })),
@@ -1009,7 +1045,7 @@
               campos: [{ k: 'nome', label: 'Nome', req: true }, { k: 'papel', label: 'Acesso', type: 'select', options: [['equipe', 'Equipe (sem financeiro)'], ['admin', 'Administrador (tudo)']] }],
               onSave: function (o) { api('POST', '/api/equipe', o).then(function (r) { carregarConfig(); mostrarChave('Chave de ' + r.membro.nome, 'Envie esta chave para ' + primeiro(r.membro.nome) + ' por um canal seguro. Ela aparece só agora; se perder, tire o acesso e crie outra.', r.chave); }).catch(function () { sync('Não foi possível criar o acesso.', true); }); } });
           } }))),
-        h('div', { class: 'panel' }, h('h3', { text: 'Cópias de segurança' }),
+        h('div', { class: 'panel', id: 'sec-backups' }, h('h3', { text: 'Cópias de segurança' }),
           h('p', { class: 'meta', text: 'Uma cópia de tudo é guardada automaticamente a cada dia em que algo muda. Ficam as últimas 30.' }),
           c.backups.length ? h('div', { class: 'rows' }, c.backups.slice(0, 10).map(function (b) {
             return h('div', { class: 'row' }, h('span', { text: dt(b.data) }), h('span', { class: 'acts', style: 'margin:0' },
@@ -1019,17 +1055,17 @@
                 api('POST', '/api/central?restaurar=' + encodeURIComponent(b.id), {}).then(function () { sync('Cópia restaurada'); carregar(); }).catch(function () { sync('Não foi possível restaurar.', true); });
               } })));
           })) : h('p', { class: 'meta', text: 'A primeira cópia é feita na próxima alteração.' })),
-        h('div', { class: 'panel' }, h('h3', { text: 'Exportar planilhas' }),
+        h('div', { class: 'panel', id: 'sec-exportar' }, h('h3', { text: 'Exportar planilhas' }),
           h('p', { class: 'meta', text: 'Arquivos que abrem no Excel e no Google Planilhas.' }),
           h('div', { class: 'acts' }, [['clientes', 'Clientes'], ['contratos', 'Contratos'], ['cobrancas', 'Cobranças'], ['custos', 'Custos'], ['trafego', 'Tráfego'], ['leads', 'Leads']].map(function (x) { return h('button', { class: 'ghost sm', text: x[1], onclick: function () { exportar(x[0]); } }); }),
             h('button', { class: 'ghost sm', text: 'Tudo (arquivo completo)', onclick: function () { exportar('json'); } }))),
-        h('div', { class: 'panel' }, h('h3', { text: 'Integração com o Espia só' }),
+        h('div', { class: 'panel', id: 'sec-integracao' }, h('h3', { text: 'Integração com o Espia só' }),
           h('p', { class: 'meta', text: 'Quando a plataforma do Espia só estiver no ar, ela avisa o painel a cada assinatura. O cliente e o contrato entram sozinhos, e você recebe um aviso.' }),
           h('div', { class: 'rows' },
             h('div', { class: 'row' }, h('span', { text: 'Endereço' }), h('button', { class: 'link', text: 'Copiar', onclick: function () { copiar(url); } })),
             h('div', { class: 'row' }, h('span', { text: 'Chave da integração' }), h('button', { class: 'link', text: 'Mostrar', onclick: function () { mostrarChave('Chave da integração do Espia só', 'Vai no cabeçalho x-integracao das chamadas da plataforma para ' + url + '. Não compartilhe fora do código da plataforma.', c.chave || 'Indisponível'); } }))),
           h('details', null, h('summary', { class: 'meta', text: 'Exemplo do que a plataforma envia' }), h('pre', { class: 'msg', text: exemplo }))),
-        h('div', { class: 'panel' }, h('h3', { text: 'Histórico de alterações' }),
+        h('div', { class: 'panel', id: 'sec-historico' }, h('h3', { text: 'Histórico de alterações' }),
           (S.db.log || []).length ? h('div', { class: 'rows log' }, S.db.log.slice(0, 60).map(function (x) { return h('div', { class: 'row' }, h('span', null, h('b', { text: x.quem }), h('span', { text: ' ' + x.acao })), h('span', { class: 'meta', text: dth(x.em) })); })) : h('p', { class: 'meta', text: 'As alterações começam a aparecer aqui.' }))));
   }
 
@@ -1062,14 +1098,42 @@
   function render() {
     if (!S.db) return;
     var abertos = S.pedidos.filter(function (p) { return leadSt(p.id) === 'Novo'; }).length;
-    var atr = S.db.entregas.filter(atrasada).length, nav = $('#tabs');
+    var atr = S.db.entregas.filter(atrasada).length, cobAtr = S.db.cobrancas.filter(cobAtrasada).length;
+    var badge = { leads: abertos, entregas: atr, financeiro: cobAtr }, nomeTab = {};
+    TABS.forEach(function (t) { nomeTab[t[0]] = t[1]; });
+    var nav = $('#tabs'), pequeno = document.body.classList.contains('menu-mini') && window.innerWidth > 900, abertosG = gruposAbertos();
     nav.textContent = '';
-    TABS.forEach(function (t) {
-      if (t[2] && !admin()) return;
-      var n = t[0] === 'leads' ? abertos : t[0] === 'entregas' ? atr : t[0] === 'financeiro' ? S.db.cobrancas.filter(cobAtrasada).length : 0;
-      nav.appendChild(h('button', { type: 'button', 'aria-current': S.tab === t[0] ? 'page' : null, onclick: function () { menu(false); ir(t[0]); } }, icone(t[0]), h('span', { text: t[1] }), n ? h('span', { class: 'n', text: String(n) }) : null));
-      if (S.tab === t[0]) $('#mTitle').textContent = t[1];
+    function vai(tab, secao) { return function () { menu(false); ir(tab, null, secao); }; }
+    function folha(tab, nome, secao, sub) {
+      var padrao = { financeiro: 'topo', config: 'tela' };
+      var ativo = S.tab === tab && (!secao || (S.secao || padrao[tab]) === secao);
+      var n = !secao ? badge[tab] || 0 : secao === 'atrasadas' ? cobAtr : 0;
+      return h('button', { type: 'button', title: pequeno ? nome : null, 'aria-current': ativo ? 'page' : null, onclick: vai(tab, secao) }, sub ? null : icone(tab), h('span', { class: 'rot', text: nome }), n ? h('span', { class: 'n', text: String(n) }) : null);
+    }
+    MENU.forEach(function (g, gi) {
+      if (g.tab) { nav.appendChild(folha(g.tab, nomeTab[g.tab], null, false)); return; }
+      if (g.admin && !admin()) return;
+      var filhos = g.filhos.filter(function (f) { return !f[2] || admin(); });
+      if (!filhos.length) return;
+      if (pequeno) {
+        var vistos = {};
+        nav.appendChild(h('div', { class: 'sep' }));
+        filhos.forEach(function (f) { if (vistos[f[0]]) return; vistos[f[0]] = 1; nav.appendChild(folha(f[0], f[3] ? g.nome : f[1], null, false)); });
+        return;
+      }
+      var temAtivo = filhos.some(function (f) { return f[0] === S.tab; });
+      var aberto = abertosG[g.id] === undefined ? temAtivo : (abertosG[g.id] || temAtivo);
+      var soma = filhos.reduce(function (a, f) { return a + (f[3] ? (f[3] === 'atrasadas' ? cobAtr : 0) : (badge[f[0]] || 0)); }, 0);
+      var grp = h('div', { class: 'grp' + (aberto ? ' aberto' : '') });
+      var seta = icone('seta'); seta.setAttribute('class', 'seta');
+      grp.appendChild(h('button', { type: 'button', class: 'cat' + (temAtivo ? ' tem-ativo' : ''), 'aria-expanded': String(!!aberto), onclick: function () {
+        var a = gruposAbertos(); a[g.id] = !grp.classList.contains('aberto'); pref('mv_menu_abertos', JSON.stringify(a));
+        grp.classList.toggle('aberto', a[g.id]); this.setAttribute('aria-expanded', String(a[g.id]));
+      } }, icone(g.icone), h('span', { class: 'rot', text: g.nome }), !aberto && soma ? h('span', { class: 'n', text: String(soma) }) : null, seta));
+      grp.appendChild(h('div', { class: 'subs' }, filhos.map(function (f) { return folha(f[0], f[1], f[3], true); })));
+      nav.appendChild(grp);
     });
+    var tit = nomeTab[S.tab] || ''; $('#mTitle').textContent = tit;
     if (S.fluxUnmount) { try { S.fluxUnmount(); } catch (e) {} S.fluxUnmount = null; }
     document.body.classList.toggle('tela-fluxos', S.tab === 'fluxos');
     var v = $('#view'); v.textContent = ''; v.appendChild(TELAS[S.tab]());
@@ -1077,6 +1141,8 @@
   }
 
   /* ---------- início ---------- */
+  aplicarEscala(); mini();
+  $('#recolher').addEventListener('click', function () { mini(!document.body.classList.contains('menu-mini')); render(); });
   var hash = (location.hash || '').slice(1); if (TELAS[hash]) S.tab = hash;
   $('#login').addEventListener('submit', function (e) { e.preventDefault(); setKey($('#k').value.trim()); $('#k').value = ''; carregar(); });
   $('#logout').addEventListener('click', function () { clearKey(); S.db = null; S.cfg = null; S.eu = null; showLogin(); });

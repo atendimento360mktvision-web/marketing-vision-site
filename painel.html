@@ -30,12 +30,16 @@
 </form>
 
 <div id="app" hidden>
-  <aside class="side" id="side" aria-label="Menu do painel">
-    <img src="img/mv-logo-branca.webp" alt="Marketing Vision">
-    <nav class="tabs" id="tabs"></nav>
+  <aside class="sidebar" id="side" aria-label="Menu do painel">
+    <div class="side-top">
+      <img class="logo-full" src="img/mv-logo-branca.webp" alt="Marketing Vision">
+      <img class="logo-mini" src="img/mv-simbolo.webp" alt="Marketing Vision">
+      <button class="recolher" id="recolher" type="button" aria-label="Recolher menu" title="Recolher menu"></button>
+    </div>
+    <nav class="nav" id="tabs"></nav>
     <div class="side-foot">
       <div><span class="quem" id="quem"></span><span class="sync" id="sync" aria-live="polite"></span></div>
-      <button class="ghost sm" id="logout" type="button">Sair</button>
+      <button class="ghost sm" id="logout" type="button" title="Sair">Sair</button>
     </div>
   </aside>
   <div class="scrim" id="scrim"></div>
