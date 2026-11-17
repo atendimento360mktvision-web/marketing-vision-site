@@ -87,13 +87,15 @@ h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.08;letter-spacin
 .o1{animation:spin 60s linear infinite}
 .o2{animation:spin 40s linear infinite reverse}
 .o3{animation:spin 28s linear infinite}
+.scan{animation:spin 7s cubic-bezier(.45,.05,.55,.95) infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .orbit-sym{position:absolute;left:50%;top:50%;width:26%;height:auto;transform:translate(-50%,-50%);filter:drop-shadow(0 10px 30px rgba(204,153,68,.35));animation:float 6s ease-in-out infinite}
 @keyframes float{50%{transform:translate(-50%,-56%)}}
 .badge{position:absolute;right:2%;bottom:4%;width:132px;height:132px;border-radius:50%;background:rgba(35,33,34,.85);border:1px solid rgba(204,153,68,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .badge svg{width:100%;height:100%;animation:spin 16s linear infinite}
 .badge text{font-family:var(--sans);font-size:12px;font-weight:600;fill:var(--ouro-luz)}
-.badge-c{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-size:24px;color:var(--marfim)}
+.badge-c{position:absolute;inset:0;display:grid;place-items:center}
+.badge-c img{width:36%;height:auto}
 .scroll-hint{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:26px;height:42px;border:1px solid rgba(246,242,234,.3);border-radius:20px}
 .scroll-hint span{position:absolute;left:50%;top:8px;width:3px;height:8px;margin-left:-1.5px;border-radius:3px;background:var(--ouro-luz);animation:wheel 2s var(--ease) infinite}
 @keyframes wheel{0%{opacity:0;transform:translateY(0)}30%{opacity:1}100%{opacity:0;transform:translateY(14px)}}
@@ -326,7 +328,6 @@ h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.08;letter-spacin
   .hero-visual{order:-1;max-width:330px;justify-self:center;margin-bottom:6px}
   .badge{width:96px;height:96px;right:-2%;bottom:0}
   .badge text{font-size:11.5px}
-  .badge-c{font-size:18px}
   .scroll-hint{display:none}
   .prod-lp{grid-template-columns:1fr}
   .serv-grid{grid-template-columns:1fr}
@@ -340,6 +341,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.08;letter-spacin
 }
 @media (max-width:600px){
   .hero h1{font-size:40px}
+  .eyebrow{letter-spacing:.14em;font-size:11px}
   .hero-ctas .btn{width:100%}
   .f2{grid-template-columns:1fr}
   .steps{grid-template-columns:1fr}
