@@ -1,0 +1,8 @@
+{
+  "name": "marketing-vision-site",
+  "private": true,
+  "description": "Site oficial da Marketing Vision",
+  "dependencies": {
+    "@vercel/blob": "^2.9.0"
+  }
+}

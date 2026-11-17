@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Pedidos de reunião · Marketing Vision</title>
+<link rel="icon" href="img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ouro:#CC9944;--luz:#E4B05D;--grafite:#373435;--noite:#232122;--marfim:#F6F2EA;--nevoa:#9A9596;--grad:linear-gradient(135deg,#AC7E37,#E4B05D 50%,#CC9944)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Montserrat,system-ui,sans-serif;background:var(--noite);color:var(--marfim);min-height:100vh}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px clamp(16px,4vw,40px);border-bottom:1px solid rgba(246,242,234,.08)}
+.top img{height:34px}
+h1{font-family:"Bodoni Moda",serif;font-weight:500;font-size:28px}
+main{padding:28px clamp(16px,4vw,40px);max-width:1200px;margin:0 auto}
+.login{max-width:380px;margin:12vh auto;background:rgba(246,242,234,.04);border:1px solid rgba(246,242,234,.1);border-radius:22px;padding:30px;display:grid;gap:16px}
+input{font:inherit;font-size:16px;padding:12px 14px;border-radius:12px;border:1px solid rgba(246,242,234,.2);background:transparent;color:var(--marfim)}
+button{font:inherit;font-weight:600;cursor:pointer;border:0;border-radius:99px;padding:12px 20px;background:var(--grad);color:var(--noite)}
+button.ghost{background:transparent;border:1px solid rgba(246,242,234,.25);color:var(--marfim);padding:8px 14px;font-size:13px}
+.err{color:#e88a80;font-size:14px;min-height:1em}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px}
+.bar p{color:var(--nevoa);font-size:14px}
+.list{display:grid;gap:14px}
+.item{background:rgba(246,242,234,.04);border:1px solid rgba(246,242,234,.09);border-radius:18px;padding:20px 22px;display:grid;grid-template-columns:1fr auto;gap:10px 20px}
+.item h2{font-family:"Bodoni Moda",serif;font-weight:500;font-size:22px}
+.meta{font-size:13px;color:var(--nevoa)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tags span{font-size:12px;padding:4px 10px;border-radius:99px;border:1px solid rgba(204,153,68,.5);color:var(--luz)}
+.msg{grid-column:1/-1;font-size:14px;color:rgba(246,242,234,.8);white-space:pre-wrap}
+.acts{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end}
+.acts a{font-size:13px;font-weight:600;padding:8px 14px;border-radius:99px;background:#2f8f4e;color:#fff;text-decoration:none}
+.empty{color:var(--nevoa);padding:40px 0;text-align:center}
+@media (max-width:640px){.item{grid-template-columns:1fr}.acts{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<div class="top"><img src="img/mv-logo-branca.webp" alt="Marketing Vision"><h1>Pedidos de reunião</h1></div>
+<main>
+  <form class="login" id="login" hidden>
+    <label for="k">Chave do painel</label>
+    <input id="k" type="password" autocomplete="current-password" required>
+    <p class="err" id="err"></p>
+    <button type="submit">Entrar</button>
+  </form>
+  <section id="app" hidden>
+    <div class="bar"><p id="count"></p><div><button class="ghost" id="reload" type="button">Atualizar</button> <button class="ghost" id="logout" type="button">Sair</button></div></div>
+    <div class="list" id="list"></div>
+  </section>
+</main>
+<script src="js/painel.js" defer></script>
+</body>
+</html>
