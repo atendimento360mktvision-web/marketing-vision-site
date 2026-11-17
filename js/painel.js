@@ -17,8 +17,17 @@
   var HAB_ST = ['Na fila', 'Estudando', 'Praticando', 'Dominada'];
   var CLI_ST = ['ativo', 'pausado', 'encerrado'];
   var CON_ST = ['proposta', 'ativo', 'encerrado'];
+  var PRODUTOS = {
+    espiaso: { nome: 'Espia só', tipo: 'Produto' },
+    landing: { nome: 'Landing page', tipo: 'Produto' },
+    trafego: { nome: 'Tráfego pago', tipo: 'Serviço' },
+    social: { nome: 'Social media e estratégia', tipo: 'Serviço' },
+    video: { nome: 'Vídeo (roteiro e edição)', tipo: 'Serviço' },
+    motion: { nome: 'Motion, 3D e VFX', tipo: 'Serviço' }
+  };
+  var ESTEIRA_PADRAO = ['espiaso', 'landing', 'trafego', 'social', 'video', 'motion'];
   var PACOTES = ['Só Espia só', 'Só landing', 'Com tráfego', 'Pacote completo', 'Conteúdo e produção', 'Sem contrato ativo'];
-  var TABS = [['geral', 'Visão geral'], ['leads', 'Leads'], ['clientes', 'Clientes'], ['contratos', 'Contratos'], ['entregas', 'Entregas'], ['workflow', 'Workflow comercial'], ['habilidades', 'Habilidades']];
+  var TABS = [['geral', 'Visão geral'], ['esteira', 'Esteira de produtos'], ['leads', 'Leads'], ['clientes', 'Clientes'], ['contratos', 'Contratos'], ['entregas', 'Entregas'], ['workflow', 'Workflow comercial'], ['habilidades', 'Habilidades']];
   var ICON = {
     geral: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
     leads: 'M4 13l3-8h10l3 8v6H4zM4 13h5l1 2h4l1-2h5',
@@ -26,6 +35,7 @@
     contratos: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
     entregas: 'M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v6h-4z',
     workflow: 'M4 5h6v5H4zM14 14h6v5h-6zM7 10v6.5h7',
+    esteira: 'M3 20h5v-5h5v-5h5V5h3',
     habilidades: 'M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.5-.8z'
   };
   function icone(id) {
@@ -499,6 +509,72 @@
         h('div', { class: 'acts', style: 'margin-top:14px' }, h('button', { class: 'sm', text: 'Adicionar passo', onclick: function () { formPasso(w, null); } }))]);
   }
 
+  function esteira() {
+    var e = (S.db.esteira || []).filter(function (g) { return PRODUTOS[g]; });
+    ESTEIRA_PADRAO.forEach(function (g) { if (e.indexOf(g) < 0) e.push(g); });
+    return e;
+  }
+  function gruposAtivos(cid) { var g = {}; contratosDe(cid).filter(ativo).forEach(function (k) { g[serv(k.servico).grupo] = 1; }); return g; }
+  function telaEsteira() {
+    var ordem = esteira(), ativos = S.db.clientes.filter(function (c) { return c.status === 'ativo'; });
+    var tem = {}; ordem.forEach(function (g) { tem[g] = []; });
+    var mapa = {}; ativos.forEach(function (c) { var g = gruposAtivos(c.id); mapa[c.id] = g; Object.keys(g).forEach(function (x) { if (tem[x]) tem[x].push(c); }); });
+    var completos = ativos.filter(function (c) { return ordem.every(function (g) { return mapa[c.id][g]; }); });
+    var semNada = ativos.filter(function (c) { return !Object.keys(mapa[c.id]).length; });
+    function receita(g) {
+      return S.db.contratos.filter(function (k) { return ativo(k) && serv(k.servico).grupo === g; }).reduce(function (o, k) { var v = Number(k.valor) || 0; if (k.tipo === 'recorrente') o.m += v; else o.u += v; return o; }, { m: 0, u: 0 });
+    }
+    function chipCli(c) { return h('button', { class: 'chip', text: c.nome, onclick: function () { ir('clientes', { cBusca: c.nome, cPac: '', cSt: 'ativo' }); } }); }
+    function mover(i, d) { var o = ordem.slice(), x = o.splice(i, 1)[0]; o.splice(i + d, 0, x); S.db.esteira = o; mudou(); }
+    var editando = !!S.f.esOrdem;
+
+    var degraus = h('div', { class: 'ladder' }, ordem.map(function (g, i) {
+      var r = receita(g), p = PRODUTOS[g], planos = null;
+      if (g === 'espiaso') {
+        var pro = 0, fpv = 0; S.db.contratos.forEach(function (k) { if (ativo(k) && k.servico === 'espiaso_pro') pro++; if (ativo(k) && k.servico === 'espiaso_fpv') fpv++; });
+        planos = h('div', { class: 'meta', text: 'Pro: ' + pro + ' · Feito para você: ' + fpv });
+      }
+      return h('div', { class: 'rung' },
+        h('div', { class: 'tags' }, h('span', { class: 'tag g', text: (i + 1) + 'º degrau' }), h('span', { class: 'tag ' + (p.tipo === 'Produto' ? 'f' : ''), text: p.tipo })),
+        h('h4', { text: p.nome }),
+        h('div', { class: 'big', text: String(tem[g].length) }),
+        h('div', { class: 'meta', text: tem[g].length === 1 ? 'cliente ativo' : 'clientes ativos' }),
+        planos,
+        h('div', { class: 'meta', text: (r.m ? brl(r.m) + ' por mês' : '') + (r.m && r.u ? ' · ' : '') + (r.u ? brl(r.u) + ' em projetos' : '') || 'Sem valor cadastrado' }),
+        editando ? h('div', { class: 'acts' },
+          h('button', { class: 'ghost sm', 'aria-label': 'Mover para trás', text: '←', disabled: i === 0, onclick: function () { mover(i, -1); } }),
+          h('button', { class: 'ghost sm', 'aria-label': 'Mover para frente', text: '→', disabled: i === ordem.length - 1, onclick: function () { mover(i, 1); } })) : null);
+    }));
+
+    var oport = ordem.map(function (g, i) {
+      var donos = tem[g];
+      var alvos = ordem.slice(i + 1).concat(ordem.slice(0, i));
+      var linhas = alvos.map(function (alvo, j) {
+        var podem = donos.filter(function (c) { return !mapa[c.id][alvo]; });
+        if (!podem.length) return null;
+        var prox = alvo === ordem[i + 1];
+        return h('div', { class: 'opp' + (prox ? ' next' : '') },
+          h('div', { class: 'opp-h' }, h('span', { text: (prox ? 'Próximo degrau: ' : '') + PRODUTOS[alvo].nome }), h('b', { text: String(podem.length) })),
+          h('div', { class: 'chips' }, podem.map(chipCli)));
+      }).filter(Boolean);
+      return h('div', { class: 'panel' },
+        h('h3', { text: 'Quem tem ' + PRODUTOS[g].nome }),
+        !donos.length ? h('p', { class: 'meta', text: 'Nenhum cliente ativo neste degrau ainda.' })
+          : linhas.length ? linhas : h('p', { class: 'meta', text: 'Todos que têm este produto já fecharam os outros.' }));
+    });
+
+    return h('div', null,
+      cab('Esteira de produtos', 'Quantos clientes estão em cada produto ou serviço e o que cada um ainda pode ativar.',
+        [h('button', { class: 'ghost sm', text: editando ? 'Pronto' : 'Mudar a ordem', onclick: function () { S.f.esOrdem = !editando; render(); } })]),
+      degraus,
+      h('div', { class: 'kpis', style: 'margin-top:18px' },
+        kpi('Clientes ativos', String(ativos.length), ''),
+        kpi('Fecharam tudo', String(completos.length), completos.length ? completos.map(function (c) { return c.nome; }).join(', ') : 'nenhum ainda'),
+        kpi('Sem produto ativo', String(semNada.length), semNada.length ? semNada.map(function (c) { return c.nome; }).join(', ') : 'nenhum', semNada.length > 0)),
+      h('p', { class: 'sec', text: 'Oportunidades por degrau' }),
+      h('div', { class: 'grid2' }, oport));
+  }
+
   function telaHab() {
     return h('div', null,
       cab('Habilidades', 'O que você está aprendendo para entregar melhor e abrir serviços novos.', [h('button', { class: 'sm', text: 'Nova habilidade', onclick: function () { formHab(null); } })]),
@@ -516,7 +592,7 @@
       })));
   }
 
-  var TELAS = { geral: telaGeral, leads: telaLeads, clientes: telaClientes, contratos: telaContratos, entregas: telaEntregas, workflow: telaWorkflow, habilidades: telaHab };
+  var TELAS = { geral: telaGeral, esteira: telaEsteira, leads: telaLeads, clientes: telaClientes, contratos: telaContratos, entregas: telaEntregas, workflow: telaWorkflow, habilidades: telaHab };
   function render() {
     if (!S.db) return;
     var abertos = S.pedidos.filter(function (p) { return leadSt(p.id) === 'Novo'; }).length;
