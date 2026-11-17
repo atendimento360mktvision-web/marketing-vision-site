@@ -32,16 +32,26 @@
       var info = el('div');
       info.appendChild(el('h2', null, p.nome + (p.empresa ? ' · ' + p.empresa : '')));
       info.appendChild(el('p', 'meta', fmt(p.recebido) + ' · ' + p.whatsapp + (p.email ? ' · ' + p.email : '') + (p.periodo ? ' · prefere ' + p.periodo.toLowerCase() : '')));
-      var tags = el('div', 'tags'); (p.interesses || []).forEach(function (t) { tags.appendChild(el('span', null, t)); }); info.appendChild(tags);
+      var tags = el('div', 'tags'); tags.appendChild(el('span', 'orig', p.origem || 'Site oficial')); (p.interesses || []).forEach(function (t) { tags.appendChild(el('span', null, t)); }); info.appendChild(tags);
       it.appendChild(info);
       var acts = el('div', 'acts');
       var digits = String(p.whatsapp || '').replace(/\D/g, '');
       if (digits) {
         var a = el('a', null, 'Chamar no WhatsApp');
-        var txt = 'Olá, ' + p.nome.split(' ')[0] + '! Aqui é da Marketing Vision. Recebemos o seu pedido de reunião pelo site. Qual o melhor dia para conversarmos?';
+        var txt = 'Olá, ' + p.nome.split(' ')[0] + '! Aqui é da Marketing Vision. ' + (p.origem === 'LP Marketing Vision' ? 'Recebemos o seu pedido de amostra grátis. Qual o melhor dia para a reunião de apresentação?' : 'Recebemos o seu pedido de reunião pelo site. Qual o melhor dia para conversarmos?');
         a.href = 'https://wa.me/' + (digits.length <= 11 ? '55' + digits : digits) + '?text=' + encodeURIComponent(txt);
         a.target = '_blank'; a.rel = 'noopener';
         acts.appendChild(a);
+      }
+      if (p.email) {
+        var m = el('a', null, 'Responder por e-mail');
+        var amostra = p.origem === 'LP Marketing Vision';
+        var assunto = amostra ? 'Sua amostra grátis: vamos marcar a reunião' : 'Seu pedido de reunião com a Marketing Vision';
+        var corpo = 'Olá, ' + p.nome.split(' ')[0] + '!\n\n' + (amostra
+          ? 'Recebemos o seu pedido de amostra grátis' + (p.empresa ? ' para ' + p.empresa : '') + '. Sua amostra fica pronta em até 48 horas e vamos apresentá-la numa reunião com você, junto com o investimento e as condições.\n\nQual dia e horário ficam melhores para você?'
+          : 'Recebemos o seu pedido de reunião pelo site. Qual dia e horário ficam melhores para você?') + '\n\nEquipe Marketing Vision';
+        m.href = 'mailto:' + p.email + '?subject=' + encodeURIComponent(assunto) + '&body=' + encodeURIComponent(corpo);
+        acts.appendChild(m);
       }
       var del = el('button', 'ghost', 'Excluir'); del.type = 'button';
       del.addEventListener('click', function () {

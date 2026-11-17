@@ -17,6 +17,18 @@ function sameSite(req) {
   return !!h && (HOSTS.some(r => r.test(h)) || extra.includes(h));
 }
 
+// Libera o formulário das landing pages (outros domínios permitidos) a enviar para esta API
+function cors(req, res) {
+  const o = req.headers.origin || '';
+  if (o && sameSite({ headers: { origin: o } })) {
+    res.setHeader('Access-Control-Allow-Origin', o);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  }
+}
+
 function readLimited(req, max) {
   return new Promise((resolve) => {
     if (typeof req.body === 'string') return resolve(req.body.length > max ? null : req.body);
@@ -41,4 +53,4 @@ function same(a, b) {
   return x.length === y.length && crypto.timingSafeEqual(x, y);
 }
 
-module.exports = { sameSite, readLimited, json, same };
+module.exports = { sameSite, cors, readLimited, json, same };
