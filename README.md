@@ -6,7 +6,9 @@ Página única com as soluções (Espia só e landing pages), os serviços (trá
 
 - `index.html`, `css/site.css`, `js/site.js`: o site, sem etapa de build.
 - `api/reuniao.js`: recebe o formulário e guarda cada pedido no Vercel Blob (privado).
-- `painel.html` e `api/pedidos.js`: painel com a lista de pedidos, protegido pela chave `PAINEL_TOKEN`.
+- `painel.html`, `css/painel.css` e `js/painel.js`: painel central da Marketing Vision (visão geral, leads, clientes, contratos, entregas, workflow comercial e habilidades), protegido pela chave `PAINEL_TOKEN`.
+- `api/central.js`: guarda os dados do painel num único arquivo privado no Blob (`db/central.json`), com controle de versão para ninguém sobrescrever o que o outro salvou. Na primeira abertura usa os dados iniciais de `api/_lib/seed.js`.
+- `api/pedidos.js`: lista e exclui os pedidos dos formulários (site e landing pages).
 
 ## Variáveis na Vercel
 

@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
     email: cut(b.email, 120),
     interesses: (Array.isArray(b.interesses) ? b.interesses : []).filter(i => INTERESSES.includes(i)),
     periodo: PERIODOS.includes(b.periodo) ? b.periodo : '',
-    mensagem: cut(b.mensagem, 1500),
+    mensagem: String(b.mensagem == null ? '' : b.mensagem).replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').trim().slice(0, 1500),
     origem: ORIGENS.includes(b.origem) ? b.origem : 'Site oficial'
   };
   const digits = lead.whatsapp.replace(/\D/g, '');
