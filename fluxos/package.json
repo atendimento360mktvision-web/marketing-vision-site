@@ -1,0 +1,13 @@
+{
+  "name": "mv-fluxos",
+  "private": true,
+  "description": "Construtor visual de processos do painel. Gera js/fluxos.js e css/fluxos.css (npm run build).",
+  "scripts": { "build": "vite build" },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "@xyflow/react": "^12.3.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.4.11"
+  }
+}

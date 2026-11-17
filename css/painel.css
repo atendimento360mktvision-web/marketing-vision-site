@@ -151,6 +151,10 @@ pre.msg{font-family:ui-monospace,Menlo,monospace;font-size:12px;overflow-x:auto;
 details summary{cursor:pointer;margin-top:10px}
 .rows.log .row{align-items:flex-start}
 .rows.log .meta{white-space:nowrap}
+.fluxos-tela{display:flex;flex-direction:column;height:calc(100vh - 54px)}
+.fluxos-tela .head{margin-bottom:14px}
+.fluxos-area{flex:1;min-height:520px}
+body.tela-fluxos main{max-width:none;padding-bottom:24px}
 .empty{color:var(--nevoa);padding:30px 0;text-align:center;font-size:14px}
 dialog{margin:auto;border:1px solid var(--linha);border-radius:22px;background:#2a2829;color:var(--marfim);width:min(620px,94vw);max-height:90vh;padding:0}
 dialog::backdrop{background:rgba(10,9,9,.7)}

@@ -30,7 +30,7 @@
   };
   var ESTEIRA_PADRAO = ['espiaso', 'landing', 'trafego', 'social', 'video', 'motion'];
   var PACOTES = ['Só Espia só', 'Só landing', 'Com tráfego', 'Pacote completo', 'Conteúdo e produção', 'Sem contrato ativo'];
-  var TABS = [['geral', 'Visão geral'], ['esteira', 'Esteira de produtos'], ['leads', 'Leads'], ['clientes', 'Clientes'], ['contratos', 'Contratos', 1], ['financeiro', 'Financeiro', 1], ['entregas', 'Entregas'], ['trafego', 'Tráfego pago'], ['workflow', 'Workflow comercial'], ['habilidades', 'Habilidades'], ['config', 'Configurações', 1]];
+  var TABS = [['geral', 'Visão geral'], ['esteira', 'Esteira de produtos'], ['leads', 'Leads'], ['clientes', 'Clientes'], ['contratos', 'Contratos', 1], ['financeiro', 'Financeiro', 1], ['entregas', 'Entregas'], ['trafego', 'Tráfego pago'], ['workflow', 'Workflow comercial'], ['fluxos', 'Construtor de processos'], ['habilidades', 'Habilidades'], ['config', 'Configurações', 1]];
   var ICON = {
     geral: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
     leads: 'M4 13l3-8h10l3 8v6H4zM4 13h5l1 2h4l1-2h5',
@@ -42,6 +42,7 @@
     financeiro: 'M3 6h18v13H3zM3 10h18M7 15h4',
     trafego: 'M4 4v16h16M8 15l3-4 3 2 5-6',
     config: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1',
+    fluxos: 'M3 5h6v5H3zM15 4h6v5h-6zM15 15h6v5h-6zM9 7.5h3v9h3M12 6.5h3',
     habilidades: 'M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.5-.8z'
   };
   function icone(id) {
@@ -207,7 +208,7 @@
     return Promise.all([api('GET', '/api/central'), api('GET', '/api/pedidos').catch(function () { return { itens: [] }; })])
       .then(function (r) {
         S.db = r[0].db; S.etag = r[0].etag; S.eu = r[0].eu || { nome: '', papel: 'admin' }; S.pedidos = r[1].itens || [];
-        ['workflows', 'habilidades', 'cobrancas', 'custos', 'trafego', 'log'].forEach(function (k) { if (!Array.isArray(S.db[k])) S.db[k] = []; });
+        ['workflows', 'habilidades', 'cobrancas', 'custos', 'trafego', 'log', 'fluxos'].forEach(function (k) { if (!Array.isArray(S.db[k])) S.db[k] = []; });
         S.db.leads = S.db.leads || {};
         $('#login').hidden = true; $('#top').hidden = true; $('#app').hidden = false;
         $('#quem').textContent = S.eu.nome ? S.eu.nome + (admin() ? ' · administrador' : ' · equipe') : '';
@@ -1032,7 +1033,32 @@
           (S.db.log || []).length ? h('div', { class: 'rows log' }, S.db.log.slice(0, 60).map(function (x) { return h('div', { class: 'row' }, h('span', null, h('b', { text: x.quem }), h('span', { text: ' ' + x.acao })), h('span', { class: 'meta', text: dth(x.em) })); })) : h('p', { class: 'meta', text: 'As alterações começam a aparecer aqui.' }))));
   }
 
-  var TELAS = { geral: telaGeral, esteira: telaEsteira, financeiro: telaFinanceiro, trafego: telaTrafego, config: telaConfig, leads: telaLeads, clientes: telaClientes, contratos: telaContratos, entregas: telaEntregas, workflow: telaWorkflow, habilidades: telaHab };
+  /* ---------- construtor de processos (React Flow, carregado só quando a aba abre) ---------- */
+  var fluxosCarregando = null;
+  function carregarFluxos() {
+    if (window.MVFluxos) return Promise.resolve();
+    if (fluxosCarregando) return fluxosCarregando;
+    var css = h('link', { rel: 'stylesheet', href: '/css/fluxos.css?v=1' }); document.head.appendChild(css);
+    fluxosCarregando = new Promise(function (ok, erro) { var sc = h('script', { src: '/js/fluxos.js?v=1' }); sc.onload = ok; sc.onerror = function () { fluxosCarregando = null; erro(); }; document.body.appendChild(sc); });
+    return fluxosCarregando;
+  }
+  function telaFluxos() {
+    var area = h('div', { class: 'fluxos-area' }, h('p', { class: 'empty', text: 'Carregando o construtor…' }));
+    var wrap = h('div', { class: 'fluxos-tela' },
+      cab('Construtor de processos', 'Mapa interativo da jornada do cliente, do primeiro contato ao contrato. Monte, conecte e teste o processo etapa por etapa.'),
+      area);
+    carregarFluxos().then(function () {
+      if (!area.isConnected) return;
+      area.textContent = '';
+      S.fluxUnmount = window.MVFluxos.mount(area, {
+        fluxos: JSON.parse(JSON.stringify(S.db.fluxos || [])), podeEditar: true,
+        onSalvar: function (lista, acao) { S.db.fluxos = JSON.parse(JSON.stringify(lista)); salvar(acao); }
+      });
+    }).catch(function () { area.textContent = ''; area.appendChild(h('p', { class: 'empty', text: 'Não foi possível carregar o construtor. Confira a internet e abra a aba de novo.' })); });
+    return wrap;
+  }
+
+  var TELAS = { fluxos: telaFluxos, geral: telaGeral, esteira: telaEsteira, financeiro: telaFinanceiro, trafego: telaTrafego, config: telaConfig, leads: telaLeads, clientes: telaClientes, contratos: telaContratos, entregas: telaEntregas, workflow: telaWorkflow, habilidades: telaHab };
   function render() {
     if (!S.db) return;
     var abertos = S.pedidos.filter(function (p) { return leadSt(p.id) === 'Novo'; }).length;
@@ -1044,6 +1070,8 @@
       nav.appendChild(h('button', { type: 'button', 'aria-current': S.tab === t[0] ? 'page' : null, onclick: function () { menu(false); ir(t[0]); } }, icone(t[0]), h('span', { text: t[1] }), n ? h('span', { class: 'n', text: String(n) }) : null));
       if (S.tab === t[0]) $('#mTitle').textContent = t[1];
     });
+    if (S.fluxUnmount) { try { S.fluxUnmount(); } catch (e) {} S.fluxUnmount = null; }
+    document.body.classList.toggle('tela-fluxos', S.tab === 'fluxos');
     var v = $('#view'); v.textContent = ''; v.appendChild(TELAS[S.tab]());
     try { history.replaceState(null, '', '#' + S.tab); } catch (e) {}
   }

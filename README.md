@@ -29,3 +29,4 @@ Abas: visão geral, esteira de produtos, leads, clientes, contratos, financeiro,
 - `api/push.js` e `sw.js`: avisos no celular e no computador (Web Push). Aviso a cada pedido novo e resumo diário às 8h (agendamento em `vercel.json`). As chaves VAPID são criadas pelo próprio servidor.
 - `api/integracao.js`: ponto de entrada para a plataforma Espia só registrar assinaturas (cliente e contrato entram sozinhos). A chave aparece em Configurações.
 - `api/pedidos.js`: lista e exclui os pedidos dos formulários.
+- Construtor de processos: aba com canvas (React Flow) para montar e testar a jornada do cliente. O código-fonte fica em `fluxos/` e gera `js/fluxos.js` e `css/fluxos.css` com `cd fluxos && npm install && npm run build` (copie os dois arquivos de `fluxos/dist/`). O painel só carrega esse arquivo quando a aba é aberta. Os fluxos ficam em `fluxos` dentro de `db/central.json`.

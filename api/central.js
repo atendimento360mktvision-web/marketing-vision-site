@@ -10,8 +10,8 @@ const seed = require('./_lib/seed');
 
 const PATH = 'db/central.json';
 const LISTAS = ['clientes', 'contratos', 'entregas', 'workflows', 'habilidades'];
-const NOVAS = ['cobrancas', 'custos', 'trafego', 'log'];
-const DA_EQUIPE = ['clientes', 'entregas', 'leads', 'workflows', 'habilidades', 'trafego'];
+const NOVAS = ['cobrancas', 'custos', 'trafego', 'log', 'fluxos'];
+const DA_EQUIPE = ['clientes', 'entregas', 'leads', 'workflows', 'habilidades', 'trafego', 'fluxos'];
 const MANTER_BACKUPS = 30;
 
 function hoje() { return new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10); }
