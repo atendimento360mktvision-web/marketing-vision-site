@@ -4,6 +4,7 @@
 const crypto = require('crypto');
 const { put } = require('@vercel/blob');
 const { sameSite, cors, readLimited, json } = require('./_lib/util');
+const avisos = require('./_lib/avisos');
 
 const INTERESSES = ['Tráfego pago', 'Landing page ou site', 'Motion, 3D e VFX', 'Espia só Feito para você', 'Ainda não sei'];
 const PERIODOS = ['Manhã', 'Tarde', 'Noite'];
@@ -48,5 +49,12 @@ module.exports = async (req, res) => {
     console.error('blob', e && e.message);
     return json(res, 503, { erro: 'armazenamento' });
   }
+  // Avisa no celular e no computador de quem ativou os avisos do painel
+  const amostra = lead.origem === 'LP Marketing Vision';
+  await avisos.enviarRapido({
+    title: amostra ? 'Novo pedido de amostra grátis' : 'Novo pedido de reunião',
+    body: lead.nome + (lead.empresa ? ' · ' + lead.empresa : '') + (amostra ? ' · amostra em até 48h' : ' · ' + (lead.interesses || []).join(', ')),
+    url: '/painel#leads'
+  }, 3500);
   return json(res, 200, { ok: true });
 };
