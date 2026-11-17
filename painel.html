@@ -13,9 +13,8 @@
 <link rel="stylesheet" href="css/painel.css">
 </head>
 <body>
-<header class="top">
+<header class="top" id="top">
   <img src="img/mv-logo-branca.webp" alt="Marketing Vision">
-  <div class="top-r"><span class="sync" id="sync" aria-live="polite"></span><button class="ghost sm" id="logout" type="button" hidden>Sair</button></div>
 </header>
 
 <form class="login" id="login" hidden>
@@ -27,8 +26,22 @@
 </form>
 
 <div id="app" hidden>
-  <nav class="tabs" id="tabs" aria-label="Seções do painel"></nav>
-  <main id="view"></main>
+  <aside class="side" id="side" aria-label="Menu do painel">
+    <img src="img/mv-logo-branca.webp" alt="Marketing Vision">
+    <nav class="tabs" id="tabs"></nav>
+    <div class="side-foot">
+      <span class="sync" id="sync" aria-live="polite"></span>
+      <button class="ghost sm" id="logout" type="button">Sair</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="content">
+    <div class="mbar">
+      <button class="ghost sm" id="menuBtn" type="button" aria-controls="side" aria-expanded="false">Menu</button>
+      <span id="mTitle"></span>
+    </div>
+    <main id="view"></main>
+  </div>
 </div>
 
 <dialog id="dlg"><form method="dialog" id="dlgForm" novalidate></form></dialog>

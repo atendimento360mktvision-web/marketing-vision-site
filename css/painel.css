@@ -26,12 +26,21 @@ button:disabled{opacity:.45;cursor:default}
 a.btn{display:inline-flex;align-items:center;font-size:13px;font-weight:600;padding:7px 13px;border-radius:99px;text-decoration:none;color:var(--marfim);border:1px solid rgba(246,242,234,.25)}
 a.btn.wa{background:#2f8f4e;border-color:#2f8f4e;color:#fff}
 .err{color:var(--erro);font-size:14px;min-height:1em}
-.tabs{display:flex;gap:4px;overflow-x:auto;padding:12px clamp(12px,4vw,36px) 0;border-bottom:1px solid var(--linha);scrollbar-width:none;position:sticky;top:0;background:var(--noite);z-index:5}
-.tabs::-webkit-scrollbar{display:none}
-.tabs button{background:none;color:var(--nevoa);border-radius:0;padding:10px 14px 12px;font-weight:500;white-space:nowrap;border-bottom:2px solid transparent}
-.tabs button[aria-current="page"]{color:var(--marfim);border-bottom-color:var(--ouro)}
-.tabs .n{display:inline-block;margin-left:6px;font-size:11px;padding:1px 7px;border-radius:99px;background:rgba(204,153,68,.22);color:var(--luz)}
-main{padding:24px clamp(16px,4vw,40px) 80px;max-width:1240px;margin:0 auto}
+#app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;padding:24px 14px 18px;border-right:1px solid var(--linha);background:#1e1c1d;overflow-y:auto}
+.side > img{height:28px;width:auto;align-self:flex-start;margin:0 10px 26px}
+.tabs{display:flex;flex-direction:column;gap:3px}
+.tabs button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 12px;border-radius:12px;background:none;color:var(--nevoa);font-weight:500;font-size:14.5px}
+.tabs button:hover{background:rgba(246,242,234,.05);color:var(--marfim)}
+.tabs button[aria-current="page"]{background:rgba(204,153,68,.14);color:var(--marfim)}
+.tabs svg{width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tabs button[aria-current="page"] svg{stroke:var(--luz)}
+.tabs .n{margin-left:auto;font-size:11px;padding:1px 8px;border-radius:99px;background:rgba(204,153,68,.22);color:var(--luz)}
+.side-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 10px 0;border-top:1px solid var(--linha)}
+.content{min-width:0}
+.mbar{display:none}
+.scrim{display:none}
+main{padding:30px clamp(16px,3.5vw,44px) 80px;max-width:1240px}
 .head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:20px}
 .head h2{font-size:clamp(26px,3vw,34px)}
 .head p{color:var(--nevoa);font-size:14px;margin-top:4px;max-width:60ch}
@@ -85,6 +94,7 @@ main{padding:24px clamp(16px,4vw,40px) 80px;max-width:1240px;margin:0 auto}
 .line:hover{border-color:rgba(204,153,68,.5)}
 .line .sub{font-size:12px;color:var(--nevoa)}
 .line .val{font-weight:600}
+.line > .tag{justify-self:end}
 .line .val.zero{color:var(--alerta);font-weight:500}
 .sec{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--nevoa);margin:26px 0 12px}
 .steps{display:flex;gap:4px;flex-wrap:wrap}
@@ -111,6 +121,15 @@ dialog::backdrop{background:rgba(10,9,9,.7)}
 #dlgForm .hint{font-size:12px;color:var(--nevoa)}
 #dlgForm .foot{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-top:6px}
 #dlgForm .foot div{display:flex;gap:10px;margin-left:auto}
+@media (max-width:900px){
+  #app{grid-template-columns:1fr}
+  .side{position:fixed;left:0;top:0;bottom:0;width:272px;z-index:30;transform:translateX(-100%);transition:transform .25s ease;box-shadow:none}
+  body.menu-open .side{transform:none}
+  body.menu-open .scrim{display:block;position:fixed;inset:0;z-index:25;background:rgba(10,9,9,.6)}
+  .mbar{display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;background:var(--noite);padding:12px 16px;border-bottom:1px solid var(--linha)}
+  #mTitle{font-family:"Bodoni Moda",serif;font-size:19px}
+  main{padding-top:22px}
+}
 @media (max-width:760px){
   .line{grid-template-columns:1fr auto;gap:4px 12px}
   .line > :nth-child(n+3):not(:last-child){grid-column:1}

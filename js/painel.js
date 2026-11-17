@@ -18,7 +18,21 @@
   var CLI_ST = ['ativo', 'pausado', 'encerrado'];
   var CON_ST = ['proposta', 'ativo', 'encerrado'];
   var PACOTES = ['Só Espia só', 'Só landing', 'Com tráfego', 'Pacote completo', 'Conteúdo e produção', 'Sem contrato ativo'];
-  var TABS = [['geral', 'Visão geral'], ['leads', 'Leads'], ['clientes', 'Clientes'], ['contratos', 'Contratos'], ['entregas', 'Entregas'], ['workflow', 'Workflow'], ['habilidades', 'Habilidades']];
+  var TABS = [['geral', 'Visão geral'], ['leads', 'Leads'], ['clientes', 'Clientes'], ['contratos', 'Contratos'], ['entregas', 'Entregas'], ['workflow', 'Workflow comercial'], ['habilidades', 'Habilidades']];
+  var ICON = {
+    geral: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+    leads: 'M4 13l3-8h10l3 8v6H4zM4 13h5l1 2h4l1-2h5',
+    clientes: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.5a3.5 3.5 0 0 1 0 6.5M18 14c2 .7 3 2.8 3 6',
+    contratos: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
+    entregas: 'M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v6h-4z',
+    workflow: 'M4 5h6v5H4zM14 14h6v5h-6zM7 10v6.5h7',
+    habilidades: 'M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.5-.8z'
+  };
+  function icone(id) {
+    var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path');
+    svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true'); path.setAttribute('d', ICON[id] || ''); svg.appendChild(path); return svg;
+  }
+  function menu(abrir) { document.body.classList.toggle('menu-open', abrir); $('#menuBtn').setAttribute('aria-expanded', String(abrir)); }
 
   var S = { db: null, etag: '', pedidos: [], tab: 'geral', f: {} };
   var KEY = 'mv_painel_k';
@@ -115,12 +129,12 @@
       .then(function (r) {
         S.db = r[0].db; S.etag = r[0].etag; S.pedidos = r[1].itens || [];
         S.db.leads = S.db.leads || {}; S.db.workflows = S.db.workflows || []; S.db.habilidades = S.db.habilidades || [];
-        $('#login').hidden = true; $('#app').hidden = false; $('#logout').hidden = false;
+        $('#login').hidden = true; $('#top').hidden = true; $('#app').hidden = false;
         sync('Tudo salvo'); render();
       })
       .catch(function (e) { showLogin(e.code === 401 ? 'Chave incorreta.' : 'Não foi possível carregar o painel agora.'); });
   }
-  function showLogin(msg) { $('#app').hidden = true; $('#logout').hidden = true; $('#login').hidden = false; $('#err').textContent = msg || ''; sync(''); $('#k').focus(); }
+  function showLogin(msg) { menu(false); $('#app').hidden = true; $('#top').hidden = false; $('#login').hidden = false; $('#err').textContent = msg || ''; sync(''); $('#k').focus(); }
 
   /* ---------- formulário genérico ---------- */
   function abrirForm(cfg) {
@@ -510,7 +524,8 @@
     nav.textContent = '';
     TABS.forEach(function (t) {
       var n = t[0] === 'leads' ? abertos : t[0] === 'entregas' ? atr : 0;
-      nav.appendChild(h('button', { type: 'button', 'aria-current': S.tab === t[0] ? 'page' : null, onclick: function () { ir(t[0]); } }, t[1], n ? h('span', { class: 'n', text: String(n) }) : null));
+      nav.appendChild(h('button', { type: 'button', 'aria-current': S.tab === t[0] ? 'page' : null, onclick: function () { menu(false); ir(t[0]); } }, icone(t[0]), h('span', { text: t[1] }), n ? h('span', { class: 'n', text: String(n) }) : null));
+      if (S.tab === t[0]) $('#mTitle').textContent = t[1];
     });
     var v = $('#view'); v.textContent = ''; v.appendChild(TELAS[S.tab]());
     try { history.replaceState(null, '', '#' + S.tab); } catch (e) {}
@@ -520,5 +535,8 @@
   var hash = (location.hash || '').slice(1); if (TELAS[hash]) S.tab = hash;
   $('#login').addEventListener('submit', function (e) { e.preventDefault(); setKey($('#k').value.trim()); $('#k').value = ''; carregar(); });
   $('#logout').addEventListener('click', function () { clearKey(); S.db = null; showLogin(); });
+  $('#menuBtn').addEventListener('click', function () { menu(!document.body.classList.contains('menu-open')); });
+  $('#scrim').addEventListener('click', function () { menu(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu(false); });
   carregar();
 })();
