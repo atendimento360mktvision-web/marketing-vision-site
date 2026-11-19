@@ -40,8 +40,9 @@ async function registrar(a) {
     Object.assign(k, { servico: p.servico, valor: p.preco, inicio: a.inicio, fim: addMeses(a.inicio, a.meses), status: a.status === 'cancelada' ? 'encerrado' : 'ativo', pagamento: 'Recorrência no cartão' });
     const acao = (a.status === 'cancelada' ? 'Espia só: assinatura cancelada de ' : 'Espia só: assinatura ' + (a.plano === 'pro' ? 'Pro' : 'Feito para você') + ' de ') + c.nome;
     db.log = [{ em: new Date().toISOString(), quem: 'Integração Espia só', acao }].concat(db.log || []).slice(0, 300);
-    try { await writeJson('db/central.json', db, atual.etag); return { cliente: c.id, contrato: k.id, novo, acao }; }
-    catch (e) { if (!conflito(e)) throw e; }
+    db.rev = (Number(db.rev) || 0) + 1;
+    await writeJson('db/central.json', db);
+    return { cliente: c.id, contrato: k.id, novo, acao };
   }
   throw new Error('conflito');
 }

@@ -1,4 +1,4 @@
-// Leitura e gravação de JSON privado no Vercel Blob, com etag para evitar sobrescrever o que outro salvou.
+// Leitura e gravação de JSON privado no Vercel Blob.
 const { get, put, list } = require('@vercel/blob');
 
 async function readJson(pathname) {
@@ -8,9 +8,10 @@ async function readJson(pathname) {
   try { return { data: JSON.parse(text), etag: r.blob && r.blob.etag }; } catch (e) { return null; }
 }
 
-async function writeJson(pathname, data, etag) {
+// Grava sem depender do etag do armazenamento: o etag que o download devolve nem sempre bate com o da gravação,
+// o que fazia toda primeira alteração ser recusada. O controle de versão do painel usa o campo rev (ver central.js).
+async function writeJson(pathname, data) {
   const opts = { access: 'private', contentType: 'application/json', addRandomSuffix: false, allowOverwrite: true };
-  if (etag) opts.ifMatch = etag;
   const r = await put(pathname, JSON.stringify(data), opts);
   return r.etag;
 }
